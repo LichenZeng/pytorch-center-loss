@@ -5,6 +5,7 @@ import datetime
 import time
 import os.path as osp
 import matplotlib
+
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
@@ -44,6 +45,7 @@ parser.add_argument('--save-dir', type=str, default='log')
 parser.add_argument('--plot', action='store_true', help="whether to plot features for every epoch")
 
 args = parser.parse_args()
+
 
 def main():
     torch.manual_seed(args.seed)
@@ -85,14 +87,14 @@ def main():
     start_time = time.time()
 
     for epoch in range(args.max_epoch):
-        print("==> Epoch {}/{}".format(epoch+1, args.max_epoch))
+        print("==> Epoch {}/{}".format(epoch + 1, args.max_epoch))
         train(model, criterion_xent, criterion_cent,
               optimizer_model, optimizer_centloss,
               trainloader, use_gpu, dataset.num_classes, epoch)
 
         if args.stepsize > 0: scheduler.step()
 
-        if args.eval_freq > 0 and (epoch+1) % args.eval_freq == 0 or (epoch+1) == args.max_epoch:
+        if args.eval_freq > 0 and (epoch + 1) % args.eval_freq == 0 or (epoch + 1) == args.max_epoch:
             print("==> Test")
             acc, err = test(model, testloader, use_gpu, dataset.num_classes, epoch)
             print("Accuracy (%): {}\t Error rate (%): {}".format(acc, err))
@@ -101,6 +103,7 @@ def main():
     elapsed = str(datetime.timedelta(seconds=elapsed))
     print("Finished. Total elapsed time (h:m:s): {}".format(elapsed))
 
+
 def train(model, criterion_xent, criterion_cent,
           optimizer_model, optimizer_centloss,
           trainloader, use_gpu, num_classes, epoch):
@@ -108,7 +111,7 @@ def train(model, criterion_xent, criterion_cent,
     xent_losses = AverageMeter()
     cent_losses = AverageMeter()
     losses = AverageMeter()
-    
+
     if args.plot:
         all_features, all_labels = [], []
 
@@ -128,7 +131,7 @@ def train(model, criterion_xent, criterion_cent,
         for param in criterion_cent.parameters():
             param.grad.data *= (1. / args.weight_cent)
         optimizer_centloss.step()
-        
+
         losses.update(loss.item(), labels.size(0))
         xent_losses.update(loss_xent.item(), labels.size(0))
         cent_losses.update(loss_cent.item(), labels.size(0))
@@ -141,14 +144,16 @@ def train(model, criterion_xent, criterion_cent,
                 all_features.append(features.data.numpy())
                 all_labels.append(labels.data.numpy())
 
-        if (batch_idx+1) % args.print_freq == 0:
+        if (batch_idx + 1) % args.print_freq == 0:
             print("Batch {}/{}\t Loss {:.6f} ({:.6f}) XentLoss {:.6f} ({:.6f}) CenterLoss {:.6f} ({:.6f})" \
-                  .format(batch_idx+1, len(trainloader), losses.val, losses.avg, xent_losses.val, xent_losses.avg, cent_losses.val, cent_losses.avg))
+                  .format(batch_idx + 1, len(trainloader), losses.val, losses.avg, xent_losses.val, xent_losses.avg,
+                          cent_losses.val, cent_losses.avg))
 
     if args.plot:
         all_features = np.concatenate(all_features, 0)
         all_labels = np.concatenate(all_labels, 0)
         plot_features(all_features, all_labels, num_classes, epoch, prefix='train')
+
 
 def test(model, testloader, use_gpu, num_classes, epoch):
     model.eval()
@@ -164,7 +169,7 @@ def test(model, testloader, use_gpu, num_classes, epoch):
             predictions = outputs.data.max(1)[1]
             total += labels.size(0)
             correct += (predictions == labels.data).sum()
-            
+
             if args.plot:
                 if use_gpu:
                     all_features.append(features.data.cpu().numpy())
@@ -182,6 +187,7 @@ def test(model, testloader, use_gpu, num_classes, epoch):
     err = 100. - acc
     return acc, err
 
+
 def plot_features(features, labels, num_classes, epoch, prefix):
     """Plot features on 2D plane.
 
@@ -192,8 +198,8 @@ def plot_features(features, labels, num_classes, epoch, prefix):
     colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
     for label_idx in range(num_classes):
         plt.scatter(
-            features[labels==label_idx, 0],
-            features[labels==label_idx, 1],
+            features[labels == label_idx, 0],
+            features[labels == label_idx, 1],
             c=colors[label_idx],
             s=1,
         )
@@ -201,14 +207,10 @@ def plot_features(features, labels, num_classes, epoch, prefix):
     dirname = osp.join(args.save_dir, prefix)
     if not osp.exists(dirname):
         os.mkdir(dirname)
-    save_name = osp.join(dirname, 'epoch_' + str(epoch+1) + '.png')
+    save_name = osp.join(dirname, 'epoch_' + str(epoch + 1) + '.png')
     plt.savefig(save_name, bbox_inches='tight')
     plt.close()
 
+
 if __name__ == '__main__':
     main()
-
-
-
-
-
