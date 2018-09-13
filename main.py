@@ -45,6 +45,11 @@ parser.add_argument('--save-dir', type=str, default='log')
 parser.add_argument('--plot', action='store_true', help="whether to plot features for every epoch")
 
 args = parser.parse_args()
+# print(args)
+"""
+Namespace(batch_size=128, dataset='mnist', eval_freq=10, gamma=0.5, gpu='0', lr_cent=0.5, lr_model=0.001, max_epoch=100,
+ model='cnn', plot=False, print_freq=50, save_dir='log', seed=1, stepsize=20, use_cpu=False, weight_cent=1, workers=4)
+"""
 
 
 def main():
